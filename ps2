@@ -1,0 +1,97 @@
+from qiskit import QuantumCircuit, transpile
+from qiskit_aer import AerSimulator
+import numpy as np
+
+# Define the number of input qubits globally
+num_qubits = 3
+
+# The Query() function remains the same as you wrote it.
+def Query():
+    # Creates either a constant or balanced oracle for num_qubits
+    qc = QuantumCircuit(num_qubits + 1)
+
+    if np.random.randint(0, 2):
+        # Flip output qubit with 50% chance
+        qc.x(num_qubits)
+    if np.random.randint(0, 2):
+        # return constant circuit with 50% chance
+        print("Function is Constant")
+        return qc
+
+    print("Function is Balanced")
+    # Choose half the possible input strings
+    on_states = np.random.choice(
+        range(2**num_qubits),
+        2**num_qubits // 2,
+        replace=False,
+    )
+
+    def add_cx(qc, bit_string):
+        for qubit, bit in enumerate(reversed(bit_string)):
+            if bit == "1":
+                qc.x(qubit)
+        return qc
+
+    for state in on_states:
+        qc.barrier()
+        # Format the state as a binary string with leading zeros
+        binary_state = format(state, f'0{num_qubits}b')
+        qc = add_cx(qc, binary_state)
+        qc.mcx(list(range(num_qubits)), num_qubits)
+        qc = add_cx(qc, binary_state)
+
+    qc.barrier()
+    return qc
+
+# The CircuitMaker() is modified to accept the oracle as an argument
+def CircuitMaker(oracle):
+    # Builds the Deutsch-Jozsa circuit
+    qc = QuantumCircuit(num_qubits + 1, num_qubits)
+
+    # Making the Negative state for the extra last qubit
+    qc.x(num_qubits)
+    qc.h(num_qubits)
+
+    # Hadamard to all input qubits
+    qc.h(range(num_qubits))
+    qc.barrier()
+
+    # Apply the function as the next step
+    qc.append(oracle.to_gate(label="Oracle"), range(num_qubits + 1))
+    qc.barrier()
+
+    # Again apply hadamard to the input qubits
+    qc.h(range(num_qubits))
+
+    # Measure the input qubits
+    qc.measure(range(num_qubits), range(num_qubits))
+
+    return qc
+
+# --- Main Execution Logic ---
+if __name__ == '__main__':
+    # 1. Generate the random oracle
+    oracle_circuit = Query()
+
+    # 2. Build the main algorithm circuit using the oracle
+    dj_circuit = CircuitMaker(oracle_circuit)
+
+    # 3. Run the circuit and get the result
+    simulator = AerSimulator()
+    # Transpile the circuit for the simulator
+    compiled_circuit = transpile(dj_circuit, simulator)
+    result = simulator.run(compiled_circuit, shots=1, memory=True).result()
+    measurements = result.get_memory()
+    
+    # 4. Interpret and print the result
+    print(f"Measurement result: {measurements[0]}")
+    if "1" in measurements[0]:
+        print("Conclusion: The function is balanced.")
+    else:
+        print("Conclusion: The function is constant.")
+
+    # Optional: Draw the final circuit
+    # print("\nFinal Circuit Diagram:")
+    # print(dj_circuit.draw('text'))
+
+explain each and every line of this code
