@@ -5,70 +5,75 @@ import numpy as np
 # Define the number of input qubits globally
 num_qubits = 3
 
-# The Query() function remains the same as you wrote it.
 def Query():
-    # Creates either a constant or balanced oracle for num_qubits
+    """
+    Creates either a constant or balanced oracle for num_qubits.
+    This version has the barriers removed so it can be converted to a gate.
+    """
     qc = QuantumCircuit(num_qubits + 1)
 
+    # Randomly decide if the function is constant or balanced
     if np.random.randint(0, 2):
-        # Flip output qubit with 50% chance
-        qc.x(num_qubits)
-    if np.random.randint(0, 2):
-        # return constant circuit with 50% chance
-        print("Function is Constant")
+        # This branch creates a BALANCED function
+        print("Oracle Type: Balanced")
+        # Choose half the possible input strings
+        on_states = np.random.choice(
+            range(2**num_qubits),
+            2**num_qubits // 2,
+            replace=False,
+        )
+
+        def add_cx(qc, bit_string):
+            # Helper function to apply X gates for multi-controlled operations
+            for qubit, bit in enumerate(reversed(bit_string)):
+                if bit == "1":
+                    qc.x(qubit)
+            return qc
+
+        for state in on_states:
+            # Format the state as a binary string with leading zeros
+            binary_state = format(state, f'0{num_qubits}b')
+            qc = add_cx(qc, binary_state)
+            qc.mcx(list(range(num_qubits)), num_qubits)
+            qc = add_cx(qc, binary_state)
+        
+        return qc
+    
+    else:
+        # This branch creates a CONSTANT function
+        print("Oracle Type: Constant")
+        if np.random.randint(0, 2):
+            # 50% chance to be f(x) = 1
+            qc.x(num_qubits)
+        # Else, 50% chance to be f(x) = 0 (do nothing)
         return qc
 
-    print("Function is Balanced")
-    # Choose half the possible input strings
-    on_states = np.random.choice(
-        range(2**num_qubits),
-        2**num_qubits // 2,
-        replace=False,
-    )
 
-    def add_cx(qc, bit_string):
-        for qubit, bit in enumerate(reversed(bit_string)):
-            if bit == "1":
-                qc.x(qubit)
-        return qc
-
-    for state in on_states:
-        qc.barrier()
-        # Format the state as a binary string with leading zeros
-        binary_state = format(state, f'0{num_qubits}b')
-        qc = add_cx(qc, binary_state)
-        qc.mcx(list(range(num_qubits)), num_qubits)
-        qc = add_cx(qc, binary_state)
-
-    qc.barrier()
-    return qc
-
-# The CircuitMaker() is modified to accept the oracle as an argument
 def CircuitMaker(oracle):
-    # Builds the Deutsch-Jozsa circuit
+    """Builds the main Deutsch-Jozsa circuit around the provided oracle."""
     qc = QuantumCircuit(num_qubits + 1, num_qubits)
 
-    # Making the Negative state for the extra last qubit
+    # 1. Prepare the ancilla qubit in the |-⟩ state
     qc.x(num_qubits)
     qc.h(num_qubits)
 
-    # Hadamard to all input qubits
+    # 2. Apply Hadamard gates to input qubits for superposition
     qc.h(range(num_qubits))
     qc.barrier()
 
-    # Apply the function as the next step
+    # 3. Apply the oracle
     qc.append(oracle.to_gate(label="Oracle"), range(num_qubits + 1))
     qc.barrier()
 
-    # Again apply hadamard to the input qubits
+    # 4. Apply Hadamard gates to input qubits again for interference
     qc.h(range(num_qubits))
 
-    # Measure the input qubits
+    # 5. Measure the input qubits
     qc.measure(range(num_qubits), range(num_qubits))
 
     return qc
 
-# --- Main Execution Logic ---
+# --- Main Execution Block ---
 if __name__ == '__main__':
     # 1. Generate the random oracle
     oracle_circuit = Query()
@@ -76,22 +81,21 @@ if __name__ == '__main__':
     # 2. Build the main algorithm circuit using the oracle
     dj_circuit = CircuitMaker(oracle_circuit)
 
-    # 3. Run the circuit and get the result
+    # 3. Set up the simulator
     simulator = AerSimulator()
-    # Transpile the circuit for the simulator
+    
+    # 4. Transpile the circuit for the simulator and run it
     compiled_circuit = transpile(dj_circuit, simulator)
     result = simulator.run(compiled_circuit, shots=1, memory=True).result()
     measurements = result.get_memory()
     
-    # 4. Interpret and print the result
+    # 5. Interpret and print the result
     print(f"Measurement result: {measurements[0]}")
     if "1" in measurements[0]:
-        print("Conclusion: The function is balanced.")
+        print("Algorithm Conclusion: The function is Balanced.")
     else:
-        print("Conclusion: The function is constant.")
+        print("Algorithm Conclusion: The function is Constant.")
 
-    # Optional: Draw the final circuit
-    # print("\nFinal Circuit Diagram:")
-    # print(dj_circuit.draw('text'))
-
-
+    # Optional: Draw the final circuit to see its structure
+    print("\nFinal Circuit Diagram:")
+    print(dj_circuit.draw('text'))
