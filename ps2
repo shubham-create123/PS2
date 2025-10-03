@@ -2,13 +2,12 @@ from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 import numpy as np
 
-# Define the number of input qubits globally
+# Define the number of input qubits
 num_qubits = 3
 
 def Query():
     """
-    Creates either a constant or balanced oracle for num_qubits.
-    This version has the barriers removed so it can be converted to a gate.
+    defines a black box function which is either balenced or constant randomly
     """
     qc = QuantumCircuit(num_qubits + 1)
 
@@ -24,7 +23,7 @@ def Query():
         )
 
         def add_cx(qc, bit_string):
-            # Helper function to apply X gates for multi-controlled operations
+            # function to apply X gates for multi-controlled operations
             for qubit, bit in enumerate(reversed(bit_string)):
                 if bit == "1":
                     qc.x(qubit)
@@ -73,7 +72,7 @@ def CircuitMaker(oracle):
 
     return qc
 
-# --- Main Execution Block ---
+# Main execution block
 if __name__ == '__main__':
     # 1. Generate the random oracle
     oracle_circuit = Query()
@@ -96,6 +95,6 @@ if __name__ == '__main__':
     else:
         print("Algorithm Conclusion: The function is Constant.")
 
-    # Optional: Draw the final circuit to see its structure
+    # Draw the final circuit to see its structure
     print("\nFinal Circuit Diagram:")
     print(dj_circuit.draw('text'))
