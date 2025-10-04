@@ -23,3 +23,20 @@ Now the mechanism of phase kickback comes into picture:
 If f(x)=0, the ancilla state becomes ∣y⊕0⟩, which is just ∣y⟩. So, ∣−⟩ is left unchanged.
 If f(x)=1, the ancilla state becomes ∣y⊕1⟩. Applying this to ∣−⟩ gives us −∣−⟩. The state is unchanged, but it has acquired a negative phase.
 
+The oracle "kicks back" a phase of (−1)^f(x) onto the input state ∣x⟩. The input register's state becomes a superposition where each component ∣x⟩ is multiplied by this phase. The ancilla qubit, having done its job, remains in the ∣−⟩ state and can now be ignored as it has alredy done his job.
+
+Now the hadamard gate is again applied to all the input qubits to remove the superposition but now if it will converge to 0 or 1 it will just depend on the phase induced before.
+
+To get the result we measure the input qubits.
+
+Case 1: The function is Constant.
+If f(x) was constant, every state ∣x⟩ in the superposition received the exact same phase (either +1 for all or -1 for all), which gives probablity of measuring ∣0...0⟩ state as 1.
+Measurement outcome: You will measure the outcome as ∣0...0⟩ as 100% probablity.
+
+Case 2: The function is Balanced.
+If f(x) was balanced, half the states received a +1 phase and the other half received a -1 phase, when we sum them up they will all get cancelled out and become 0.
+Its amplitude becomes zero so does its probablity.
+Measurement outcome: You will surely measure some other state as measuring the outcome as ∣0...0⟩ has 0% probablity.
+
+
+
