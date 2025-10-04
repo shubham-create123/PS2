@@ -38,5 +38,26 @@ If f(x) was balanced, half the states received a +1 phase and the other half rec
 Its amplitude becomes zero so does its probablity.
 Measurement outcome: You will surely measure some other state as measuring the outcome as ∣0...0⟩ has 0% probablity.
 
+Now we move to the second part and talk about code: 
+
+In the first portion we import all the neccessary things.
+Then we define the query function.
+In the next step we create the black box function which uses the if statement to randomly chooses a balenced or a constant function.
+Then we define the circuit maker function which apply all the neccessary gates as mentioned above clearly.
+
+This if __name__ == '__main__': block is the main part of the script that executes when you run the file.
+It first calls Query() to get a random oracle, then passes that oracle to CircuitMaker() to build the final circuit dj_circuit.
+It sets up the AerSimulator.
+Transphile optimizes the circuit for the simulator as our code is not yet in a state to run in the simulator.
+result.get_memory() extracts the measurement outcome, which will be a list containing a single string like ['000'] or ['101'].
+
+finally it measures the result,
+if the string is of all zeroes "the function is constant" is printed.
+if the string contains at least one non zero then "the function is balenced" is printed.
+
+This conclusion is then printed, along with the actual measurement and a text drawing of the full quantum circuit.
+
+"Thank you for reading this i think my understanding of the code is not upto the required level but i can ensure that i will learn all that and reach the required level."
+
 
 
